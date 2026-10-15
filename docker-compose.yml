@@ -1,0 +1,77 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: picklematch_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-picklematch}
+      POSTGRES_USER: ${DB_USERNAME:-picklematch}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-picklematch} -d ${DB_DATABASE:-picklematch}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [picklematch]
+
+  app:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    container_name: picklematch_app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/var/www/html
+      - app_vendor:/var/www/html/vendor
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-picklematch}
+      DB_USERNAME: ${DB_USERNAME:-picklematch}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+    networks: [picklematch]
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: picklematch_nginx
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "${APP_PORT:-8080}:80"
+    volumes:
+      - ./backend:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks: [picklematch]
+
+  vite:
+    build:
+      context: ./docker/node
+      dockerfile: Dockerfile
+    container_name: picklematch_vite
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    ports:
+      - "${VITE_PORT:-5173}:5173"
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+    networks: [picklematch]
+
+volumes:
+  pgdata:
+  app_vendor:
+  frontend_node_modules:
+
+networks:
+  picklematch:
+    driver: bridge
