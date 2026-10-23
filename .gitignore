@@ -23,3 +23,5 @@
 # Obsidian per-machine UI state
 /vault/.obsidian/workspace*.json
 /vault/.trash
+/.obsidian/workspace*.json
+.mcp.json
