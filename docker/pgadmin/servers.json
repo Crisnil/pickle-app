@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "PickleMatch",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "picklematch",
+      "Username": "picklematch",
+      "SSLMode": "prefer"
+    }
+  }
+}

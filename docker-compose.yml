@@ -39,6 +39,24 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-secret}
     networks: [picklematch]
 
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: picklematch_pgadmin
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@picklematch.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json:ro
+    networks: [picklematch]
+
   nginx:
     image: nginx:1.27-alpine
     container_name: picklematch_nginx
@@ -71,6 +89,7 @@ volumes:
   pgdata:
   app_vendor:
   frontend_node_modules:
+  pgadmin_data:
 
 networks:
   picklematch:

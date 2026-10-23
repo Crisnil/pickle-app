@@ -19,3 +19,7 @@
 
 .idea
 .vscode
+
+# Obsidian per-machine UI state
+/vault/.obsidian/workspace*.json
+/vault/.trash
